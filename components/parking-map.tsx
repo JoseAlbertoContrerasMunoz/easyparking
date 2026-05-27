@@ -4,7 +4,10 @@ import { useEffect } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import {
+  formatMoney,
+  formatNullableNumber,
   parkingSizeLabels,
+  parkingReportLabels,
   parkingStatusLabels,
   type ParkingLot,
   type ParkingStatus,
@@ -18,8 +21,10 @@ type Coordinates = {
 type ParkingMapProps = {
   center: Coordinates;
   userLocation: Coordinates | null;
-  selectedLocation: Coordinates | null;
   parkingLots: ParkingLot[];
+  isPickingLocation: boolean;
+  focusTarget: Coordinates | null;
+  focusVersion: number;
   onPickLocation: (coords: Coordinates) => void;
 };
 
@@ -27,31 +32,69 @@ function createMarkerIcon(color: string) {
   return L.divIcon({
     className: "",
     html: `
-      <span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:9999px;background:${color};box-shadow:0 0 0 6px color-mix(in srgb, ${color} 18%, transparent);border:2px solid white"></span>
+      <span style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:9999px;background:${color};box-shadow:0 0 0 7px color-mix(in srgb, ${color} 20%, transparent),0 12px 28px rgba(15,23,42,.25);border:3px solid white"></span>
     `,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
   });
 }
 
-function MapInteraction({ onPickLocation }: { onPickLocation: (coords: Coordinates) => void }) {
-  useMapEvents({
+function MapInteraction({
+  isPickingLocation,
+  onPickLocation,
+}: {
+  isPickingLocation: boolean;
+  onPickLocation: (coords: Coordinates) => void;
+}) {
+  const map = useMapEvents({
     click(event) {
-      onPickLocation({ latitude: event.latlng.lat, longitude: event.latlng.lng });
+      if (!isPickingLocation) {
+        return;
+      }
+
+      map.panTo(event.latlng, { animate: true });
+    },
+    moveend() {
+      if (!isPickingLocation) {
+        return;
+      }
+
+      const center = map.getCenter();
+      onPickLocation({ latitude: center.lat, longitude: center.lng });
     },
   });
+
+  useEffect(() => {
+    if (!isPickingLocation) {
+      return;
+    }
+
+    const center = map.getCenter();
+    onPickLocation({ latitude: center.lat, longitude: center.lng });
+  }, [isPickingLocation, map, onPickLocation]);
 
   return null;
 }
 
-function MapFollow({ center }: { center: Coordinates }) {
+function MapFocus({
+  focusTarget,
+  focusVersion,
+}: {
+  focusTarget: Coordinates | null;
+  focusVersion: number;
+}) {
   const map = useMap();
 
   useEffect(() => {
-    map.setView([center.latitude, center.longitude], Math.max(map.getZoom(), 14), {
+    if (!focusTarget || focusVersion === 0) {
+      return;
+    }
+
+    map.flyTo([focusTarget.latitude, focusTarget.longitude], Math.max(map.getZoom(), 15), {
       animate: true,
+      duration: 0.7,
     });
-  }, [center.latitude, center.longitude, map]);
+  }, [focusTarget, focusVersion, map]);
 
   return null;
 }
@@ -70,14 +113,16 @@ function parkingStatusColor(status: ParkingStatus) {
 export function ParkingMap({
   center,
   userLocation,
-  selectedLocation,
   parkingLots,
+  isPickingLocation,
+  focusTarget,
+  focusVersion,
   onPickLocation,
 }: ParkingMapProps) {
   return (
     <MapContainer center={[center.latitude, center.longitude]} zoom={14} scrollWheelZoom className="h-full min-h-[420px]">
-      <MapFollow center={center} />
-      <MapInteraction onPickLocation={onPickLocation} />
+      <MapFocus focusTarget={focusTarget} focusVersion={focusVersion} />
+      <MapInteraction isPickingLocation={isPickingLocation} onPickLocation={onPickLocation} />
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -99,15 +144,6 @@ export function ParkingMap({
         </>
       ) : null}
 
-      {selectedLocation ? (
-        <Marker
-          position={[selectedLocation.latitude, selectedLocation.longitude]}
-          icon={createMarkerIcon("#f59e0b")}
-        >
-          <Popup>Punto seleccionado para crear un estacionamiento</Popup>
-        </Marker>
-      ) : null}
-
       {parkingLots.map((lot) => (
         <Marker
           key={lot.id}
@@ -121,6 +157,15 @@ export function ParkingMap({
               <div className="text-xs uppercase tracking-wide text-slate-500">
                 {parkingSizeLabels[lot.size]} · {parkingStatusLabels[lot.status]}
               </div>
+              <div className="text-xs text-slate-500">
+                {lot.zoneName ? `Sector ${lot.zoneName} · ` : ""}
+                {formatMoney(lot.pricePerHour)} · {formatNullableNumber(lot.estimatedWaitMinutes, " min espera")}
+              </div>
+              {lot.lastReportType ? (
+                <div className="text-xs font-medium text-slate-700">
+                  Último reporte: {parkingReportLabels[lot.lastReportType]}
+                </div>
+              ) : null}
             </div>
           </Popup>
         </Marker>

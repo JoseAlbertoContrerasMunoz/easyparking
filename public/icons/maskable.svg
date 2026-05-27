@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Easy Parking">
+  <rect width="512" height="512" fill="#087f5b"/>
+  <circle cx="256" cy="256" r="196" fill="#0fa678"/>
+  <path fill="#eff7f0" d="M142 126h150c69 0 112 39 112 99 0 61-43 99-112 99h-72v62h-78V126Zm78 67v65h63c26 0 41-12 41-33 0-20-15-32-41-32h-63Z"/>
+  <circle cx="373" cy="374" r="54" fill="#f8d36f"/>
+  <path fill="#111815" d="M373 338c21 0 38 16 38 36 0 21-17 38-38 38s-38-17-38-38c0-20 17-36 38-36Z"/>
+</svg>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 function formatAddress(address: Record<string, string | undefined>) {
-  const parts = [address.road, address.suburb, address.city, address.state]
+  const parts = [address.road, address.suburb ?? address.neighbourhood, address.city ?? address.town, address.state]
     .filter((part): part is string => Boolean(part))
     .slice(0, 4);
 
@@ -39,5 +39,8 @@ export async function GET(request: Request) {
   return NextResponse.json({
     displayName: data.display_name ?? null,
     address: data.address ? formatAddress(data.address) : null,
+    road: data.address?.road ?? null,
+    neighbourhood: data.address?.neighbourhood ?? data.address?.suburb ?? null,
+    city: data.address?.city ?? data.address?.town ?? data.address?.municipality ?? null,
   });
 }
