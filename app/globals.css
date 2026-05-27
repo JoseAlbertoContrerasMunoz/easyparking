@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f1ea;
+  --background-strong: #fffaf3;
+  --foreground: #171717;
+  --muted: #5f6359;
+  --border: rgba(23, 23, 23, 0.12);
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --accent-soft: rgba(15, 118, 110, 0.12);
+  --surface: rgba(255, 250, 243, 0.8);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(245, 158, 11, 0.14), transparent 22%),
+    linear-gradient(180deg, #f9f5ee 0%, #f4f1ea 44%, #efe8de 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(15, 118, 110, 0.2);
+  color: var(--foreground);
+}
+
+.leaflet-container {
+  border-radius: 1.5rem;
+  font-family: inherit;
+}
+
+.easy-parking-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 72px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(20px);
+}
+
+.easy-parking-focus:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
